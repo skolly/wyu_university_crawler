@@ -20,30 +20,51 @@ class Crawler_score(object):
              'pwd':'',
              'verifycode':''
             } 
+    # 选择获取学期的成绩的数据 默认201701       
+    datas = {
+
+        'xnxqdm':'201701',
+        'page':'1',
+        'rows':'20',
+        'sort':'xnxqdm',
+        'order':'asc'
+
+            } 
 
     #定义实例属性，初始化
     def __init__(self): 
 
-        self.get_verify() 
+        self.get_verify()
+        
+        try:
 
-        # 输入验证码
-        vercode = str(input("请输入验证码：")) 
+            # 输入验证码
+            vercode = str(input("请输入验证码：")) 
 
-        # 输入学号 
-        self.account = str(input('请输入你的学号：'))    
+            # 输入学号 
+            self.account = str(input('请输入你的学号：'))    
 
-        #输入密码   
-        pwd = str(input('请输入你的密码：'))  
+            #输入密码   
+            pwd = str(input('请输入你的密码：'))  
+        
+            # 输入学期
+            xnxqdm = str(input('请输入你需要查询的学期：')) 
 
 
-        # 把数据保存在data中 
-        self.data['verifycode'] = vercode 
+            # 把数据保存在data中 
+            self.data['verifycode'] = vercode 
     
-        self.data['account'] = self.account 
+            self.data['account'] = self.account 
     
-        self.data['pwd'] = pwd 
+            self.data['pwd'] = pwd 
+        
+            # 把数据保存在datas中
+            self.datas['xnxqdm'] = xnxqdm
 
-        self.login_in()       
+            self.login_in()
+            
+         except:
+            print('输入信息有误！')
         
 
     # 登录子系统
@@ -79,22 +100,9 @@ class Crawler_score(object):
         with open( datetime.now().date().isoformat()+'.png','wb') as f: 
     
             f.write(self.var_code.content)
-      
-            f.close()
 
     # 获取成绩  把成绩保存为.txt文件
     def get_score(self): 
-
-        # 获取2017年第一学期的成绩的数据        
-        datas = {
-
-        'xnxqdm':'201701',
-        'page':'1',
-        'rows':'20',
-        'sort':'xnxqdm',
-        'order':'asc'
-
-            } 
 
         # 获取成绩的网址    
         get_score_url = self.url + '/xskccjxx!getDataList.action' 
@@ -110,57 +118,48 @@ class Crawler_score(object):
         with open( self.account+'.txt','wb') as f: 
         
              f.write(score_html.content)
-        
-             f.close()
 
         self.data_processing()
 
     # 本地文件的数据处理        
     def data_processing(self): 
 
-    
-        try :
+        with open( self.account+'.txt','r',encoding = 'utf-8') as f:
 
-            with open( self.account+'.txt','r',encoding = 'utf-8') as f:
+             # 转换json格式为字典格式    
+             data = json.load(f) 
 
-                # 转换json格式为字典格式    
-                data = json.load(f) 
+             # 获取list格式的成绩
+             datas = data['rows'] 
 
-                # 获取list格式的成绩
-                datas = data['rows'] 
+             totals = data['total'] 
 
-                totals = data['total'] 
+         with open(self.account + '.txt','w',encoding = 'utf-8') as d:
 
-                f.close()
-
-            with open(self.account + '.txt','w',encoding = 'utf-8') as d:
-
-                jd_sum = 0.0
-
-                # 遍历list 获取科目、成绩和绩点    
-                for i in  datas : 
-
-                    jd_sum += float(i['cjjd'])
-        
-                    scores =  i['kcmc'] + ' : ' + i['zcj']+',   ' + '绩点' + ' : ' + i['cjjd'] + '\n' +'\n'
-
-                    # 此为验证成绩是否正确，可注释掉                    
-                    print (i['kcmc'] + ' : ' + i['zcj'])   
-
-                    d.write(scores)
-
-                 # 平均绩点
-                jd_ave =  '平均绩点:   ' +  str(jd_sum / int(totals) )
-
-                print (jd_ave)
-
-                d.write(jd_ave)
+             jd_sum = 0.0
                 
-                d.close()
+             xf_sum = 0.0
 
-        except :
+             # 遍历list 获取科目、成绩和绩点    
+             for i in  datas :
 
-            print('获取成绩失败！')
+                jd_sum += float(i['cjjd'])*float(i['xf'])
+
+                xf_sum += float(i['xf'])
+        
+                scores =  i['kcmc'] + ' : ' + i['zcj']+ '\n' + '\n'
+
+                # 此为验证成绩是否正确，可注释掉                    
+                print (i['kcmc'] + ' : ' + i['zcj'])   
+
+                d.write(scores)
+
+             # 平均绩点
+             jd_ave =  '平均绩点:   ' +  str(jd_sum / int(totals) )
+
+             print (jd_ave)
+
+             d.write(jd_ave)
 
 if __name__ == '__main__' :
     
