@@ -12,6 +12,7 @@
     密码 = pwd    
     验证码 = vercode
     学期 = xnxqdm
+    
   3、模仿浏览器发送数据给接收数据的网址,登录子系统。
     #login_url = 'http://202.192.240.29/new/login'
   
